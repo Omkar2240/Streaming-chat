@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button id="send">Send Message</button>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:4747/ws");
+
+    ws.onopen = () => {
+      console.log("Connected");
+    };
+
+    ws.onmessage = (event) => {
+      console.log("Received:", event.data);
+    };
+
+    ws.onerror = (error) => {
+      console.error(error);
+    };
+
+    document.getElementById("send").onclick = () => {
+      ws.send(
+        JSON.stringify({
+          type: "USER_MESSAGE",
+          content: "What is today's weather?"
+        })
+      );
+    };
+  </script>
+</body>
+</html>
