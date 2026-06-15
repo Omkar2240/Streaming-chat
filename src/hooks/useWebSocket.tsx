@@ -28,13 +28,16 @@ export function useWebSocket(
 
         case "TOKEN":
           machine.handleToken(
+            msg.seq,
             msg.stream_id,
             msg.text
           );
           break;
 
         case "TOOL_CALL":
+          // Passing msg.seq to maintain sequential alignment
           machine.handleToolCall(
+            msg.seq,
             msg.call_id,
             msg.stream_id,
             msg.tool_name,
@@ -43,27 +46,28 @@ export function useWebSocket(
           break;
 
         case "TOOL_RESULT":
+          // Passing msg.seq and msg.stream_id to handle out-of-order execution safely
           machine.handleToolResult(
+            msg.seq,
             msg.call_id,
+            msg.stream_id,
             msg.result
           );
           break;
 
         case "CONTEXT_SNAPSHOT":
-          console.log(
-            "Context Snapshot",
-            msg
-          );
+          console.log("Context Snapshot", msg);
           break;
 
         case "STREAM_END":
+          // Clean up stream metadata in the machine to prevent memory leaks over time
+          if (machine.closeStream) {
+            machine.closeStream(msg.stream_id);
+          }
           break;
 
         default:
-          console.warn(
-            "Unknown message",
-            msg
-          );
+          console.warn("Unknown message", msg);
       }
     };
 
@@ -72,55 +76,35 @@ export function useWebSocket(
     };
   }, [wsUrl, machine]);
 
-  const sendMessage =
-    useCallback(
-      (content: string) => {
-        const ws = wsRef.current;
+  const sendMessage = useCallback((content: string) => {
+    const ws = wsRef.current;
 
-        if (
-          !ws ||
-          ws.readyState !==
-            WebSocket.OPEN
-        ) {
-          return false;
-        }
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return false;
+    }
 
-        ws.send(
-          JSON.stringify({
-            type: "USER_MESSAGE",
-            content,
-          })
-        );
+    ws.send(JSON.stringify({
+      type: "USER_MESSAGE",
+      content
+    }));
 
-        return true;
-      },
-      []
-    );
+    return true;
+  }, []);
 
-  const sendToolAck =
-    useCallback(
-      (callId: string) => {
-        const ws = wsRef.current;
+  const sendToolAck = useCallback((callId: string) => {
+    const ws = wsRef.current;
 
-        if (
-          !ws ||
-          ws.readyState !==
-            WebSocket.OPEN
-        ) {
-          return false;
-        }
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return false;
+    }
 
-        ws.send(
-          JSON.stringify({
-            type: "TOOL_ACK",
-            call_id: callId,
-          })
-        );
+    ws.send(JSON.stringify({
+      type: "TOOL_ACK",
+      call_id: callId,
+    }));
 
-        return true;
-      },
-      []
-    );
+    return true;
+  }, []);
 
   return {
     wsRef,

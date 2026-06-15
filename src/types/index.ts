@@ -33,7 +33,13 @@ export type ServerMessage =
         type: "TOOL_RESULT";
         seq: number;
         call_id: string;
+        stream_id: string;
         result: ToolResult;
+    } 
+    | {
+        type: "STREAM_END";
+        seq: number;
+        stream_id: string;
     }
 
 
