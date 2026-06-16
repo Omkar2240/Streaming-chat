@@ -36,11 +36,6 @@ export type ServerMessage =
         stream_id: string;
         result: ToolResult;
     } 
-    | {
-        type: "STREAM_END";
-        seq: number;
-        stream_id: string;
-    }
 
 
 
@@ -78,3 +73,30 @@ export type Block =
         type: "user";
         content: string;
     }
+
+// ─── Trace Timeline Types ──────────────────────────────────────────
+
+export type TraceGroup =
+    | {
+        id: string;
+        kind: "token_batch";
+        streamId: string;
+        tokenCount: number;
+        fullText: string;
+        startSeq: number;
+        endSeq: number;
+        startTime: number;
+        endTime: number;
+    }
+    | {
+        id: string;
+        kind: "event";
+        eventType: string;
+        direction: "in" | "out";
+        seq?: number;
+        streamId?: string;
+        callId?: string;
+        timestamp: number;
+        summary: string;
+        detail?: unknown;
+    };

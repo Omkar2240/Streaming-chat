@@ -1,8 +1,13 @@
 import { StreamMachine } from "@/lib/stream-machine";
+import { TraceStore } from "@/lib/trace-store";
 import { ServerMessage } from "@/types";
 import { useEffect, useRef, useCallback, useState } from "react";
 
-export function useWebSocket(wsUrl: string, machine: StreamMachine) {
+export function useWebSocket(
+  wsUrl: string,
+  machine: StreamMachine,
+  traceStore?: TraceStore
+) {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState<
     "connected" | "reconnecting" | "offline"
@@ -13,9 +18,12 @@ export function useWebSocket(wsUrl: string, machine: StreamMachine) {
   const graceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const attemptsRef = useRef<number>(0);
 
-  // Keep a mutable reference to the machine so it never triggers a socket reconnection loop
+  // Keep mutable references so they never trigger a socket reconnection loop
   const machineRef = useRef(machine);
   useEffect(() => { machineRef.current = machine; }, [machine]);
+
+  const traceRef = useRef(traceStore ?? null);
+  useEffect(() => { traceRef.current = traceStore ?? null; }, [traceStore]);
 
   const connect = useCallback(() => {
     // 1. Guard against overlapping connections
@@ -38,12 +46,9 @@ export function useWebSocket(wsUrl: string, machine: StreamMachine) {
         const lastSeq =
           machineRef.current.getLastProcessedSeq();
 
-        ws.send(
-          JSON.stringify({
-            type: "RESUME",
-            last_seq: lastSeq,
-          })
-        );
+        const resumePayload = { type: "RESUME", last_seq: lastSeq };
+        ws.send(JSON.stringify(resumePayload));
+        traceRef.current?.push("RESUME", "out", { last_seq: lastSeq });
       }
 
       attemptsRef.current = 0;
@@ -63,25 +68,71 @@ export function useWebSocket(wsUrl: string, machine: StreamMachine) {
       try {
         const msg: ServerMessage = JSON.parse(event.data);
         const currentMachine = machineRef.current;
+        const trace = traceRef.current;
 
         switch (msg.type) {
           case "PING":
-            ws.send(JSON.stringify({ type: "PONG", echo: msg.challenge }));
+            trace?.push("PING", "in", {
+              seq: msg.seq,
+              challenge: msg.challenge
+            });
+            ws.send(JSON.stringify({
+              type: "PONG",
+              echo: msg.challenge
+            }));
+            trace?.push("PONG", "out", { echo: msg.challenge });
             break;
+
           case "TOKEN":
+            trace?.push("TOKEN", "in", {
+              seq: msg.seq,
+              stream_id: msg.stream_id, 
+              text: msg.text 
+            });
             currentMachine.handleToken(msg.seq, msg.stream_id, msg.text);
             break;
+
           case "TOOL_CALL":
-            ws.send(JSON.stringify({ type: "TOOL_ACK", call_id: msg.call_id }));
+            trace?.push("TOOL_CALL", "in", {
+              seq: msg.seq, 
+              call_id: msg.call_id,
+              stream_id: msg.stream_id, 
+              tool_name: msg.tool_name, 
+              args: msg.args,
+            });
+
+            ws.send(JSON.stringify({
+               type: "TOOL_ACK",
+               call_id: msg.call_id 
+            }));
+
+            trace?.push("TOOL_ACK", "out", { call_id: msg.call_id });
             currentMachine.handleToolCall(msg.seq, msg.call_id, msg.stream_id, msg.tool_name, msg.args);
             break;
+
           case "TOOL_RESULT":
+            trace?.push("TOOL_RESULT", "in", {
+              seq: msg.seq, 
+              call_id: msg.call_id,
+              stream_id: msg.stream_id, 
+              result: msg.result,
+            });
             currentMachine.handleToolResult(msg.seq, msg.call_id, msg.stream_id, msg.result);
             break;
+
           case "STREAM_END":
+            trace?.push("STREAM_END", "in", { seq: msg.seq, stream_id: msg.stream_id });
             if (currentMachine.closeStream) currentMachine.closeStream(msg.stream_id);
             break;
+
+          case "CONTEXT_SNAPSHOT":
+            trace?.push("CONTEXT_SNAPSHOT", "in", {
+              seq: msg.seq, context_id: msg.context_id, data: msg.data,
+            });
+            break;
+
           default:
+            trace?.push("UNKNOWN", "in", msg as unknown as Record<string, unknown>);
             console.warn("Unknown message", msg);
         }
       } catch (err) {
@@ -128,9 +179,9 @@ export function useWebSocket(wsUrl: string, machine: StreamMachine) {
     };
 
     ws.onerror = () => {
-      ws.close(); // Cascades execution cleanly into the ws.onclose block above
+      ws.close(); 
     };
-  }, [wsUrl]); // Removed 'machine' dependency to kill the infinite disconnect loops!
+  }, [wsUrl]);
 
   // Hook entry & exit lifecycle
   useEffect(() => {
@@ -172,6 +223,7 @@ export function useWebSocket(wsUrl: string, machine: StreamMachine) {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
     ws.send(JSON.stringify({ type: "USER_MESSAGE", content }));
+    traceRef.current?.push("USER_MESSAGE", "out", { content });
     return true;
   }, []);
 
