@@ -50,10 +50,10 @@ export type ToolArgs = {
 }
 
 export type ToolResult = {
-    found: boolean;
-    content_preview: string;
-    relevance_score: number;
-    section: string;
+    call_id: string;
+    result: any;
+    seq: number;
+    stream_id: string;
 }
 
 export type Block =
@@ -72,4 +72,9 @@ export type Block =
         args: ToolArgs;
         status: "running" | "completed";
         result?: ToolResult
-    };
+    }
+    | {
+        id: string;
+        type: "user";
+        content: string;
+    }
