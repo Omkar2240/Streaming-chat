@@ -179,18 +179,16 @@ export class StreamMachine {
     this.lastProcessedSeq,
     seq
   );
-  console.log(
-    "UPDATED lastProcessedSeq",
-    this.lastProcessedSeq
-  );
+
     state.expectedSeq = seq + 1;
 
     // Drain the buffer sequentially
     this.checkAndDrainConsecutiveBuffer(streamId, state);
     this.notify();
   }
+  
   /**
-   * Intelligently drains buffered chunks even if there are missing integers (gaps)
+   * Drains buffered chunks even if there are missing integers
    */
   private checkAndDrainConsecutiveBuffer(streamId: string, state: StreamState) {
     // Read sorted queue keys chronologically
