@@ -217,20 +217,12 @@ Here's what happens when a user sends a message and receives a streamed response
 ```bash
 # 1. Clone the repo (if not already done)
 git clone https://github.com/Omkar2240/Streaming-chat.git
-cd hiring/frontend
 
 # 2. Install dependencies
 pnpm install
 # or: npm install
 
-# 3. Start the agent server first (in a separate terminal)
-cd ../agent-server
-pnpm install
-pnpm start              # Normal mode (port 4747)
-# or: pnpm start --mode chaos   # Chaos mode
-
-# 4. Start the frontend dev server
-cd ../frontend
+# 3. Start the frontend dev server
 pnpm run dev
 # App runs at http://localhost:3000
 ```
