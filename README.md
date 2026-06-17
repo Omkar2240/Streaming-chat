@@ -292,6 +292,8 @@ A background interval checks every 5 seconds for streams with no activity in the
 
 ## Chaos Mode Survival
 
+Check video recording: [Youtube](https://youtu.be/vWZytxJzq7g)
+
 The app is designed to survive the agent server's chaos mode, which intentionally:
 - Drops WebSocket connections randomly
 - Delays packets
