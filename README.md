@@ -234,6 +234,16 @@ pnpm run build    # Creates optimized production build
 pnpm run start    # Serves production build on http://localhost:3000
 ```
 
+## Normal Mode Screenshots
+
+### Streamed response with a tool call
+<img width="1911" height="905" alt="image" src="https://github.com/user-attachments/assets/85086a01-7210-46f2-ba71-cf3bf30cf3eb" />
+
+### The Trace Timeline
+<img width="1896" height="908" alt="image" src="https://github.com/user-attachments/assets/76a666f0-c486-43ff-8df4-11ca4bb731f1" />
+
+
+
 ### Environment
 
 No environment variables are required. The WebSocket URL (`ws://localhost:4747/ws`) is hardcoded in `src/app/page.tsx`. To change the server URL, update the `wsUrl` prop:
