@@ -216,21 +216,13 @@ Here's what happens when a user sends a message and receives a streamed response
 
 ```bash
 # 1. Clone the repo (if not already done)
-git clone <repo-url>
-cd hiring/frontend
+git clone https://github.com/Omkar2240/Streaming-chat.git
 
 # 2. Install dependencies
 pnpm install
 # or: npm install
 
-# 3. Start the agent server first (in a separate terminal)
-cd ../agent-server
-pnpm install
-pnpm start              # Normal mode (port 4747)
-# or: pnpm start --mode chaos   # Chaos mode
-
-# 4. Start the frontend dev server
-cd ../frontend
+# 3. Start the frontend dev server
 pnpm run dev
 # App runs at http://localhost:3000
 ```
@@ -241,6 +233,16 @@ pnpm run dev
 pnpm run build    # Creates optimized production build
 pnpm run start    # Serves production build on http://localhost:3000
 ```
+
+## Normal Mode Screenshots
+
+### Streamed response with a tool call
+<img width="1911" height="905" alt="image" src="https://github.com/user-attachments/assets/85086a01-7210-46f2-ba71-cf3bf30cf3eb" />
+
+### The Trace Timeline
+<img width="1896" height="908" alt="image" src="https://github.com/user-attachments/assets/76a666f0-c486-43ff-8df4-11ca4bb731f1" />
+
+
 
 ### Environment
 
@@ -289,6 +291,8 @@ A background interval checks every 5 seconds for streams with no activity in the
 ---
 
 ## Chaos Mode Survival
+
+Check video recording: [Youtube](https://youtu.be/vWZytxJzq7g)
 
 The app is designed to survive the agent server's chaos mode, which intentionally:
 - Drops WebSocket connections randomly
