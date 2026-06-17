@@ -216,7 +216,7 @@ Here's what happens when a user sends a message and receives a streamed response
 
 ```bash
 # 1. Clone the repo (if not already done)
-git clone [<repo-url>](https://github.com/Omkar2240/Streaming-chat.git)
+git clone https://github.com/Omkar2240/Streaming-chat.git
 cd hiring/frontend
 
 # 2. Install dependencies
