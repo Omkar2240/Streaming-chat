@@ -227,6 +227,8 @@ pnpm run dev
 # App runs at http://localhost:3000
 ```
 
+see Agent server setup for testing [README.md](agent-server/README.md)
+
 ### Production Build
 
 ```bash
